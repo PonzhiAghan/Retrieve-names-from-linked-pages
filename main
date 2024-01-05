@@ -1,0 +1,71 @@
+"""
+This program searches for specific texts on a website
+"""
+
+import urllib.request
+from bs4 import BeautifulSoup
+import ssl
+
+
+def html_parse(url):
+    """
+    Parse the HTML content of the given URL using BeautifulSoup.
+
+    Parameters:
+    - url (str): The URL to parse.
+
+    Returns:
+    - list: A list of 'a' tags from the HTML content.
+    """
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    try:
+        html = urllib.request.urlopen(url, context=ctx).read()
+        soup = BeautifulSoup(html, 'html.parser')
+        tags = soup('a')
+        return tags
+    except Exception as e:
+        print(f"Error occurred during HTML parsing: {e}")
+        return []
+
+
+def get_final_name(start_url, repeat_count, target_position):
+    """
+    Retrieve the final name from a sequence of linked pages.
+
+    Parameters:
+    - start_url (str): The initial URL to start the sequence.
+    - repeat_count (int): The number of times to repeat the process.
+    - target_position (int): The position of the anchor tag to follow on each page.
+
+    Returns:
+    - str: The final name obtained from the last page in the sequence.
+    """
+    current_url = start_url
+
+    for _ in range(repeat_count):
+        print('Retrieving:', current_url)
+        tags = html_parse(current_url)
+
+        for index, tag in enumerate(tags):
+            if index == target_position - 1:
+                current_url = tag.get('href', None)
+                name = tag.contents[0]
+                break
+
+        print(f"Intermediate Result: {name}")
+
+    print('Final Result:', name)
+    return name
+#
+
+if __name__ == "__main__":
+    # Get user inputs
+    start_url = input('Enter the starting URL: ')
+    repeat_count = int(input('Enter the repeat count: '))
+    target_position = int(input('Enter the target position: '))
+
+    # Perform the sequence and retrieve the final name
+    final_name = get_final_name(start_url, repeat_count, target_position)
